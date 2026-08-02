@@ -6,10 +6,16 @@ flyer batch shows up as a separate row in GoatCounter.
 
 Usage:
     pip install "qrcode[pil]"
-    python tools/make_qr.py https://YOURNAME.github.io/AI-QR-Code-Flier-Counter/ \
-        library-march coffeeshop-march bulletin-board
 
-Writes qr-codes/qr-<tag>.png for each tag. Test-scan every code with a
+    # explicit tags:
+    python tools/make_qr.py https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/ \
+        qr-001 qr-002 qr-003
+
+    # or a numbered range (qr-001 through qr-050):
+    python tools/make_qr.py https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/ \
+        --range 1 50
+
+Writes qr-codes/<tag>.png for each tag. Test-scan every code with a
 phone before printing — the URL is baked in permanently.
 """
 
@@ -31,7 +37,13 @@ def main() -> None:
         sys.exit(f"Usage: {sys.argv[0]} BASE_URL TAG [TAG ...]\n\n{__doc__}")
 
     base_url = sys.argv[1].rstrip("/") + "/"
-    tags = sys.argv[2:]
+    if sys.argv[2] == "--range":
+        if len(sys.argv) != 5:
+            sys.exit("Usage: --range START END (e.g. --range 1 50)")
+        start, end = int(sys.argv[3]), int(sys.argv[4])
+        tags = [f"qr-{i:03d}" for i in range(start, end + 1)]
+    else:
+        tags = sys.argv[2:]
     OUT_DIR.mkdir(exist_ok=True)
 
     for tag in tags:
@@ -41,7 +53,7 @@ def main() -> None:
         qr = qrcode.QRCode(error_correction=ERROR_CORRECT_Q, box_size=20, border=4)
         qr.add_data(url)
         qr.make(fit=True)
-        out = OUT_DIR / f"qr-{tag}.png"
+        out = OUT_DIR / f"{tag}.png"
         qr.make_image(fill_color="black", back_color="white").save(out)
         print(f"{out}  ->  {url}")
 

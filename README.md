@@ -8,108 +8,107 @@ codes hostage later.
 ## How it works
 
 A QR code pointed straight at `pauseai.info` can't be counted — the scan goes
-phone → their site, and you're not in the path. So the QR code points at
-**this page instead**, which counts the scan and instantly forwards the
+phone → their site, and you're not in the path. So every QR code points at
+**this site instead**, which counts the scan and instantly forwards the
 visitor on:
 
 ```
-phone scans code
+phone scans code qr-017
    → your page (github.io) — records the scan in GoatCounter, ~a quarter second
-   → forwards to the destination (e.g. pauseai.info)
+   → forwards to wherever qr-017 is assigned (e.g. pauseai.info)
 ```
 
 This is exactly what paid "dynamic QR" services do; here you own the middle
-step. Bonus: because the printed code points at *your* page, you can change
-where any batch of flyers leads later — by editing one line — **without
-reprinting anything**.
+step. Because printed codes point at *your* page, you can change where any
+code leads later **without reprinting anything**.
 
-The pieces:
+## The pieces
 
-1. **[QR Code Monkey](https://www.qrcode-monkey.com)** — makes the static
-   codes for free, no account. Static is what you want: the URL it encodes is
-   this page, which never needs to change.
-2. **This repo on GitHub Pages** — the free counting-and-forwarding page.
-3. **[GoatCounter](https://www.goatcounter.com)** — open source, free for
-   non-commercial use. Already wired in:
-   dashboard at <https://stealthsilent.goatcounter.com>.
+| File | What it is |
+|---|---|
+| [`manager.html`](manager.html) | **The control panel** — interactive table of all 500 codes: name, location, destination, notes, status, live scan counts. |
+| [`codes.json`](codes.json) | The registry: 500 code slots (`qr-001` … `qr-500`). Edited via the manager. |
+| [`index.html`](index.html) | The redirect page every QR code points at. Counts, then forwards. You never edit this. |
+| [`tools/make_qr.py`](tools/make_qr.py) | Optional: generates print-ready QR code PNGs offline. |
+
+Scan counting is [GoatCounter](https://www.goatcounter.com) (open source,
+free for non-commercial use) — dashboard at
+<https://stealthsilent.goatcounter.com>, already wired in.
 
 ## Setup
 
-### 1. Add your flyer batches (~2 min)
+### 1. Turn on GitHub Pages (~2 min)
 
-Open [`index.html`](index.html) and find the `DESTINATIONS` map near the top
-of the script — the only part you ever edit:
+**Settings → Pages** → Source **Deploy from a branch** → default branch,
+`/ (root)` → save. A minute later the site is live:
 
-```js
-var DESTINATIONS = {
-  "pauseai-library":    "https://pauseai.info",
-  "pauseai-coffeeshop": "https://pauseai.info",
-  "example-batch":      "https://example.org"
-};
+- Manager: `https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/manager.html`
+- Redirect page (what QR codes encode): `https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=qr-001`
+
+### 2. Assign your codes in the manager (~2 min per batch)
+
+Open the manager. Each row is one QR code:
+
+| Column | Editable? | Meaning |
+|---|---|---|
+| **ID** | no — permanent | What the printed code encodes (`qr-001`…`qr-500`). Never changes, so printed codes never break. |
+| **Name** | click to edit | Your label, rename anytime ("PauseAI spring run"). |
+| **Location** | click to edit | Where you physically posted it ("Main St library board"). |
+| **Destination** | click to edit | The website this code forwards to. |
+| **Scans** | automatic | Live count from GoatCounter. |
+| **Notes** | click to edit | Anything ("re-postered 3/12", "taken down"). |
+| **Status** | dropdown | `retired` stops a code from forwarding (scans still counted). |
+| **Copy URL** | button | Copies the exact URL to paste into a QR generator. |
+
+Plus search, filters (assigned / unassigned / edited), CSV export, and a
+**Load all scan counts** button (500 codes takes a couple of minutes — it goes
+gently to respect GoatCounter's rate limit).
+
+**Saving:** edits apply instantly in your browser, but a static site can't
+write to itself — to make them live for scanners, click **Download
+codes.json**, then in the GitHub repo use *Add file → Upload files* to
+replace `codes.json` and commit. (Takes ~30 seconds; Pages redeploys
+automatically.)
+
+### 3. Make the physical QR codes
+
+For each code you want to print, **Copy URL** in the manager (e.g.
+`…/AI-QR-Code-Flier-Counter/?src=qr-001`), paste it into
+[QR Code Monkey](https://www.qrcode-monkey.com) (free, static, no account),
+and download at 1000px+. Or generate any number offline:
+
+```sh
+pip install "qrcode[pil]"
+python tools/make_qr.py https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/ --range 1 50
 ```
 
-One line per flyer batch: a short tag (lowercase, no spaces) and the website
-that batch should lead to. Two batches may share a destination — they're
-still counted separately, so you can compare which locations pull.
+writes print-ready `qr-001.png` … `qr-050.png` into `qr-codes/`.
 
-### 2. Turn on GitHub Pages (~2 min)
+**Test-scan every code with your phone before printing.**
 
-1. In this repo on GitHub: **Settings → Pages**.
-2. Under **Build and deployment**: Source **Deploy from a branch**, pick your
-   default branch, folder `/ (root)`, save.
-3. After a minute the page is live at:
+### 4. Watch the numbers
 
-   ```
-   https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/
-   ```
+Scan counts appear in the manager's **Scans** column and, with graphs over
+time, at <https://stealthsilent.goatcounter.com> (one row per code, e.g.
+`/qr-017`).
 
-4. Test it: open
-   `https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=pauseai-library`
-   — you should land on pauseai.info a moment later, and the scan should
-   appear at <https://stealthsilent.goatcounter.com> as `/pauseai-library`.
-
-### 3. Make the QR codes (~5 min)
-
-1. Go to <https://www.qrcode-monkey.com> and enter the URL **for this page
-   with the batch's tag** — *not* the destination site:
-
-   ```
-   https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=pauseai-library
-   ```
-
-2. Download as **PNG at 1000px or larger** (or SVG) so it prints crisply.
-3. Repeat with a different `?src=` tag for each batch.
-4. **Test-scan every code with your phone before printing.**
-
-(Or generate them offline: `pip install "qrcode[pil]"` then
-`python tools/make_qr.py https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/ pauseai-library pauseai-coffeeshop`
-— writes print-ready PNGs into `qr-codes/`.)
-
-### 4. Read your numbers
-
-Open <https://stealthsilent.goatcounter.com>. Each batch is its own row:
-
-```
-/pauseai-library      42
-/pauseai-coffeeshop   17
-```
-
-## Changing where printed flyers point
-
-Edit the destination URL in the `DESTINATIONS` map and commit. Every flyer
-already out in the world now forwards to the new address. This is the
-"dynamic QR" feature the paid services charge for — except nothing expires
-and nobody can turn it off but you.
+> If the Scans column shows "–", log in to GoatCounter → Settings and enable
+> **"Allow adding visitor counts on your website"** (the public counter
+> endpoint the manager reads).
 
 ## Notes
 
-- **Scans with a mistyped or removed tag are never lost** — they're counted
-  under `/untagged/...`, and the visitor sees a page listing all known
+- **Scans of unassigned, retired, or mistyped codes are never lost** — they
+  count under `/untagged/…` and the visitor sees a page listing your known
   destinations instead of being stranded.
 - **The forward is fast** (typically under half a second) and never waits
   more than 1.5s on counting — if GoatCounter is unreachable, visitors are
   forwarded anyway.
+- **Physical location is whatever you type in the Location column** — a QR
+  scan carries no GPS. You know where a scan happened because you know where
+  you posted that code. (GoatCounter separately shows visitors' rough
+  country/region.)
 - **Privacy:** GoatCounter uses no cookies and collects no personal data, so
   no cookie banner is needed.
-- **Why not point codes straight at the destination?** You'd get zero data,
-  and you could never change where a printed flyer leads.
+- **Need more than 500?** Add more entries to `codes.json` — the pattern is
+  obvious in the file. Everything else adjusts automatically.

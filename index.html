@@ -66,65 +66,70 @@
 
   <script>
     /* ================================================================
-       EDIT THIS MAP — everything else can be left alone.
+       All QR codes live in codes.json (500 slots, qr-001 … qr-500),
+       edited through manager.html — you never need to touch this file.
 
-       Each flyer batch gets a tag (left side) and the website its QR
-       code should send people to (right side). The QR code for a batch
-       points at THIS page with its tag:
+       Each printed QR code points at THIS page with its ID:
 
-         https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=pauseai-library
+         https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=qr-001
 
        This page counts the scan in GoatCounter, then forwards the
-       visitor to the destination. Because the printed code points here
-       (not at the destination), you can change a destination below at
-       any time WITHOUT reprinting flyers.
+       visitor to the code's destination from codes.json. Because the
+       printed code points here (not at the destination), you can change
+       any code's destination later WITHOUT reprinting flyers.
        ================================================================ */
-    var DESTINATIONS = {
-      "pauseai-library":    "https://pauseai.info",
-      "pauseai-coffeeshop": "https://pauseai.info",
-      "example-batch":      "https://example.org"
-    };
 
     /* Your GoatCounter endpoint (dashboard: https://stealthsilent.goatcounter.com) */
     var GOATCOUNTER = "https://stealthsilent.goatcounter.com/count";
 
-    var tag  = new URLSearchParams(location.search).get("src") || "";
-    var dest = DESTINATIONS[tag];
+    var tag = new URLSearchParams(location.search).get("src") || "";
 
-    /* Record the scan as a pageview named after the tag, e.g. "/pauseai-library".
-       Unknown or missing tags are still counted, under "/untagged/...", so a
-       typo on a printed flyer never loses scans silently. */
-    var path = "/" + (dest ? tag : "untagged/" + (tag || "none"));
-    var counted = false;
-    function redirect() {
-      if (counted) return;
-      counted = true;
-      if (dest) location.replace(dest);
-    }
-    var pixel = new Image();
-    pixel.onload = redirect;   /* count confirmed -> go */
-    pixel.onerror = redirect;  /* counting must never strand the visitor */
-    pixel.src = GOATCOUNTER + "?p=" + encodeURIComponent(path);
-    setTimeout(redirect, 1500);
+    fetch("codes.json")
+      .then(function (r) { return r.json(); })
+      .catch(function () { return null; })
+      .then(function (codes) {
+        var entry = codes && codes[tag];
+        var dest = (entry && entry.status !== "retired" && entry.dest) || "";
 
-    if (dest) {
-      document.getElementById("msg").innerHTML =
-        'If nothing happens, <a href="' + dest + '">tap here</a>.';
-    } else {
-      /* No valid tag: show all known destinations instead of redirecting. */
-      document.getElementById("title").textContent = "Hmm, that code isn't set up yet.";
-      document.getElementById("msg").textContent = "Here's where our other codes lead:";
-      var list = document.getElementById("links");
-      list.hidden = false;
-      Object.keys(DESTINATIONS).forEach(function (t) {
-        var li = document.createElement("li");
-        var a = document.createElement("a");
-        a.href = DESTINATIONS[t];
-        a.textContent = DESTINATIONS[t];
-        li.appendChild(a);
-        list.appendChild(li);
+        /* Record the scan as a pageview named after the ID, e.g. "/qr-001".
+           Unknown, unassigned, or retired codes are still counted, under
+           "/untagged/...", so no scan is ever lost silently. */
+        var path = "/" + (dest ? tag : "untagged/" + (tag || "none"));
+        var done = false;
+        function redirect() {
+          if (done) return;
+          done = true;
+          if (dest) location.replace(dest);
+        }
+        var pixel = new Image();
+        pixel.onload = redirect;   /* count confirmed -> go */
+        pixel.onerror = redirect;  /* counting must never strand the visitor */
+        pixel.src = GOATCOUNTER + "?p=" + encodeURIComponent(path);
+        setTimeout(redirect, 1500);
+
+        if (dest) {
+          document.getElementById("msg").innerHTML =
+            'If nothing happens, <a href="' + dest + '">tap here</a>.';
+        } else {
+          /* No usable code: list the distinct destinations instead. */
+          document.getElementById("title").textContent = "Hmm, that code isn't set up yet.";
+          document.getElementById("msg").textContent = "Here's where our other codes lead:";
+          var list = document.getElementById("links");
+          list.hidden = false;
+          var seen = {};
+          Object.keys(codes || {}).forEach(function (id) {
+            var d = codes[id].dest;
+            if (!d || codes[id].status === "retired" || seen[d]) return;
+            seen[d] = true;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = d;
+            a.textContent = d;
+            li.appendChild(a);
+            list.appendChild(li);
+          });
+        }
       });
-    }
   </script>
 </body>
 </html>
