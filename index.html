@@ -3,7 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>You found us!</title>
+  <meta name="robots" content="noindex">
+  <title>One moment&hellip;</title>
   <style>
     :root {
       color-scheme: light dark;
@@ -47,58 +48,88 @@
       font-size: 1.9rem;
       color: var(--accent);
     }
-    p {
-      margin: 0.5rem 0;
-      line-height: 1.6;
-      color: var(--muted);
-    }
+    p, li { line-height: 1.6; color: var(--muted); }
+    ul { list-style: none; padding: 0; text-align: left; display: inline-block; }
     a { color: var(--accent); }
   </style>
-
-  <!--
-    Per-flyer-batch tagging.
-
-    Each flyer batch gets its own QR code pointing at a URL like:
-
-        https://YOURNAME.github.io/AI-QR-Code-Flier-Counter/?src=library-march
-        https://YOURNAME.github.io/AI-QR-Code-Flier-Counter/?src=coffeeshop-march
-
-    GoatCounter normally drops the query string, so this snippet folds the
-    ?src= tag back into the recorded path. In the GoatCounter dashboard you
-    will see one row per batch (e.g. "/?src=library-march") and can compare
-    which locations pull.
-  -->
-  <script>
-    window.goatcounter = {
-      path: function (p) {
-        var src = new URLSearchParams(location.search).get('src');
-        return src ? p + '?src=' + encodeURIComponent(src) : p;
-      }
-    };
-  </script>
-
-  <!--
-    The GoatCounter one-liner. Replace MYCODE with the code you picked when
-    signing up at https://www.goatcounter.com (free for non-commercial use).
-    This is the only line you must edit to start counting.
-  -->
-  <script data-goatcounter="https://MYCODE.goatcounter.com/count"
-          async src="//gc.zgo.at/count.js"></script>
 </head>
 <body>
   <main>
-    <h1>You found us!</h1>
-    <p>Thanks for scanning our flyer.</p>
-    <p>
-      <!-- Customize this page: say who you are and where to go next. -->
-      Learn more at <a href="https://example.org">our main site</a>,
-      or reach us at <a href="mailto:hello@example.org">hello@example.org</a>.
-    </p>
+    <h1 id="title">One moment&hellip;</h1>
+    <p id="msg">Sending you on your way.</p>
+    <ul id="links" hidden></ul>
+    <noscript>
+      <p>JavaScript is off, so we can't forward you automatically.
+         Please type the address printed on the flyer into your browser.</p>
+    </noscript>
   </main>
 
-  <!-- No-JavaScript fallback: still counts the visit via a tracking pixel. -->
-  <noscript>
-    <img src="https://MYCODE.goatcounter.com/count?p=/noscript" alt="">
-  </noscript>
+  <script>
+    /* ================================================================
+       All QR codes live in codes.json (500 slots, qr-001 … qr-500),
+       edited through manager.html — you never need to touch this file.
+
+       Each printed QR code points at THIS page with its ID:
+
+         https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=qr-001
+
+       This page counts the scan in GoatCounter, then forwards the
+       visitor to the code's destination from codes.json. Because the
+       printed code points here (not at the destination), you can change
+       any code's destination later WITHOUT reprinting flyers.
+       ================================================================ */
+
+    /* Your GoatCounter endpoint (dashboard: https://stealthsilent.goatcounter.com) */
+    var GOATCOUNTER = "https://stealthsilent.goatcounter.com/count";
+
+    var tag = new URLSearchParams(location.search).get("src") || "";
+
+    fetch("codes.json")
+      .then(function (r) { return r.json(); })
+      .catch(function () { return null; })
+      .then(function (codes) {
+        var entry = codes && codes[tag];
+        var dest = (entry && entry.status !== "retired" && entry.dest) || "";
+
+        /* Record the scan as a pageview named after the ID, e.g. "/qr-001".
+           Unknown, unassigned, or retired codes are still counted, under
+           "/untagged/...", so no scan is ever lost silently. */
+        var path = "/" + (dest ? tag : "untagged/" + (tag || "none"));
+        var done = false;
+        function redirect() {
+          if (done) return;
+          done = true;
+          if (dest) location.replace(dest);
+        }
+        var pixel = new Image();
+        pixel.onload = redirect;   /* count confirmed -> go */
+        pixel.onerror = redirect;  /* counting must never strand the visitor */
+        pixel.src = GOATCOUNTER + "?p=" + encodeURIComponent(path);
+        setTimeout(redirect, 1500);
+
+        if (dest) {
+          document.getElementById("msg").innerHTML =
+            'If nothing happens, <a href="' + dest + '">tap here</a>.';
+        } else {
+          /* No usable code: list the distinct destinations instead. */
+          document.getElementById("title").textContent = "Hmm, that code isn't set up yet.";
+          document.getElementById("msg").textContent = "Here's where our other codes lead:";
+          var list = document.getElementById("links");
+          list.hidden = false;
+          var seen = {};
+          Object.keys(codes || {}).forEach(function (id) {
+            var d = codes[id].dest;
+            if (!d || codes[id].status === "retired" || seen[d]) return;
+            seen[d] = true;
+            var li = document.createElement("li");
+            var a = document.createElement("a");
+            a.href = d;
+            a.textContent = d;
+            li.appendChild(a);
+            list.appendChild(li);
+          });
+        }
+      });
+  </script>
 </body>
 </html>
