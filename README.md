@@ -1,107 +1,115 @@
 # QR Code Flyer Counter
 
-Count how many people scan the QR codes on your printed flyers — with **no
-company in the middle**, nothing that expires, no ads, and no one who can hold
-your printed codes hostage later.
+Print QR codes that send people to **any website** (yours or anyone else's,
+like `pauseai.info`) while **counting every scan** — with no company in the
+middle, nothing that expires, no ads, and no one who can hold your printed
+codes hostage later.
 
-The recipe:
+## How it works
 
-1. **A static QR code** (never expires, encodes a plain URL you control) made
-   with [QR Code Monkey](https://www.qrcode-monkey.com) — truly free, static
-   codes only, no account needed.
-2. **A page you control** — this repo, hosted free on GitHub Pages.
+A QR code pointed straight at `pauseai.info` can't be counted — the scan goes
+phone → their site, and you're not in the path. So the QR code points at
+**this page instead**, which counts the scan and instantly forwards the
+visitor on:
+
+```
+phone scans code
+   → your page (github.io) — records the scan in GoatCounter, ~a quarter second
+   → forwards to the destination (e.g. pauseai.info)
+```
+
+This is exactly what paid "dynamic QR" services do; here you own the middle
+step. Bonus: because the printed code points at *your* page, you can change
+where any batch of flyers leads later — by editing one line — **without
+reprinting anything**.
+
+The pieces:
+
+1. **[QR Code Monkey](https://www.qrcode-monkey.com)** — makes the static
+   codes for free, no account. Static is what you want: the URL it encodes is
+   this page, which never needs to change.
+2. **This repo on GitHub Pages** — the free counting-and-forwarding page.
 3. **[GoatCounter](https://www.goatcounter.com)** — open source, free for
-   non-commercial use — counting visits via one script line in `index.html`.
-
-Give each flyer batch its own tag (`?src=library-march`,
-`?src=coffeeshop-march`) and you can compare which locations pull.
-
-Total setup is about 15 minutes.
-
----
+   non-commercial use. Already wired in:
+   dashboard at <https://stealthsilent.goatcounter.com>.
 
 ## Setup
 
-### 1. Get a GoatCounter account (~3 min)
+### 1. Add your flyer batches (~2 min)
 
-1. Go to <https://www.goatcounter.com> and click **Sign up**.
-2. Pick a code — this becomes your dashboard address, e.g.
-   `mysite.goatcounter.com`.
-3. In [`index.html`](index.html), replace **both** occurrences of `MYCODE`
-   with the code you picked (one in the `<script data-goatcounter=...>` line,
-   one in the `<noscript>` fallback).
+Open [`index.html`](index.html) and find the `DESTINATIONS` map near the top
+of the script — the only part you ever edit:
+
+```js
+var DESTINATIONS = {
+  "pauseai-library":    "https://pauseai.info",
+  "pauseai-coffeeshop": "https://pauseai.info",
+  "example-batch":      "https://example.org"
+};
+```
+
+One line per flyer batch: a short tag (lowercase, no spaces) and the website
+that batch should lead to. Two batches may share a destination — they're
+still counted separately, so you can compare which locations pull.
 
 ### 2. Turn on GitHub Pages (~2 min)
 
 1. In this repo on GitHub: **Settings → Pages**.
-2. Under **Build and deployment**, set Source to **Deploy from a branch**,
-   pick your default branch and the `/ (root)` folder, and save.
-3. After a minute your page is live at:
+2. Under **Build and deployment**: Source **Deploy from a branch**, pick your
+   default branch, folder `/ (root)`, save.
+3. After a minute the page is live at:
 
    ```
-   https://YOURNAME.github.io/AI-QR-Code-Flier-Counter/
+   https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/
    ```
 
-   Open it once and confirm the visit shows up in your GoatCounter dashboard.
-   (GoatCounter ignores your own visits only if you enable that in its
-   settings — otherwise you'll see yourself, which is a good first test.)
+4. Test it: open
+   `https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=pauseai-library`
+   — you should land on pauseai.info a moment later, and the scan should
+   appear at <https://stealthsilent.goatcounter.com> as `/pauseai-library`.
 
-   If you have a custom domain (like `knightstables.net`), you can point it at
-   this page instead — same setup, nicer URL on the flyer.
+### 3. Make the QR codes (~5 min)
 
-### 3. Make the QR code(s) (~5 min)
-
-1. Decide on a tag for each flyer batch. Short, lowercase, no spaces:
-   `library-march`, `coffeeshop-march`, `bulletin-board`.
-2. Go to <https://www.qrcode-monkey.com> and enter the URL **with the tag**:
+1. Go to <https://www.qrcode-monkey.com> and enter the URL **for this page
+   with the batch's tag** — *not* the destination site:
 
    ```
-   https://YOURNAME.github.io/AI-QR-Code-Flier-Counter/?src=library-march
+   https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=pauseai-library
    ```
 
-3. Download as **PNG at 1000px or larger** (or SVG) so it prints crisply.
-4. Repeat with a different `?src=` value for each batch. One code per batch.
-5. **Test-scan every code with your phone before printing.** The code is
-   static — the URL is baked in permanently — so a typo means reprinting.
+2. Download as **PNG at 1000px or larger** (or SVG) so it prints crisply.
+3. Repeat with a different `?src=` tag for each batch.
+4. **Test-scan every code with your phone before printing.**
+
+(Or generate them offline: `pip install "qrcode[pil]"` then
+`python tools/make_qr.py https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/ pauseai-library pauseai-coffeeshop`
+— writes print-ready PNGs into `qr-codes/`.)
 
 ### 4. Read your numbers
 
-Open `https://MYCODE.goatcounter.com`. Each batch shows up as its own row:
+Open <https://stealthsilent.goatcounter.com>. Each batch is its own row:
 
 ```
-/?src=library-march      42
-/?src=coffeeshop-march   17
-/?src=bulletin-board      3
+/pauseai-library      42
+/pauseai-coffeeshop   17
 ```
 
-That's it. Nothing expires, and no third party sits between your printed
-codes and your page.
+## Changing where printed flyers point
 
----
-
-## Optional: generate QR codes locally
-
-If you'd rather not use any website at all, `tools/make_qr.py` generates the
-same static QR codes offline:
-
-```sh
-pip install "qrcode[pil]"
-python tools/make_qr.py https://YOURNAME.github.io/AI-QR-Code-Flier-Counter/ \
-    library-march coffeeshop-march bulletin-board
-```
-
-This writes one print-ready PNG per tag into `qr-codes/`.
+Edit the destination URL in the `DESTINATIONS` map and commit. Every flyer
+already out in the world now forwards to the new address. This is the
+"dynamic QR" feature the paid services charge for — except nothing expires
+and nobody can turn it off but you.
 
 ## Notes
 
-- **Why static QR codes?** "Dynamic" QR codes route scans through the
-  provider's redirect service. If the provider shuts down, changes pricing,
-  or expires your free trial, every flyer you've printed goes dead. A static
-  code encodes your URL directly — it works as long as your page exists.
-- **Why the `?src=` tag works:** GoatCounter normally ignores query strings,
-  so a small snippet in `index.html` folds the `src` tag back into the
-  recorded path. See the comments in that file.
-- **Visitors without JavaScript** are still counted via the `<noscript>`
-  tracking pixel (they appear under `/noscript`, without a batch tag).
-- **Privacy:** GoatCounter doesn't use cookies and doesn't collect personal
-  data, so no cookie banner is needed.
+- **Scans with a mistyped or removed tag are never lost** — they're counted
+  under `/untagged/...`, and the visitor sees a page listing all known
+  destinations instead of being stranded.
+- **The forward is fast** (typically under half a second) and never waits
+  more than 1.5s on counting — if GoatCounter is unreachable, visitors are
+  forwarded anyway.
+- **Privacy:** GoatCounter uses no cookies and collects no personal data, so
+  no cookie banner is needed.
+- **Why not point codes straight at the destination?** You'd get zero data,
+  and you could never change where a printed flyer leads.
