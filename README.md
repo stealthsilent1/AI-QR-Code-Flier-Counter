@@ -51,18 +51,28 @@ Open the manager. Each row is one QR code:
 
 | Column | Editable? | Meaning |
 |---|---|---|
-| **ID** | no — permanent | What the printed code encodes (`qr-001`…`qr-500`). Never changes, so printed codes never break. |
+| **ID / slug** | no — permanent | What the printed code encodes (`qr-001`…`qr-500`). Never changes, so printed codes never break. |
 | **Name** | click to edit | Your label, rename anytime ("PauseAI spring run"). |
+| **Owner** | click to edit | Who's responsible for this code / who posted it. |
 | **Location** | click to edit | Where you physically posted it ("Main St library board"). |
+| **Venue type** | click to edit | library / coffee shop / transit stop / … (suggestions offered, free text allowed). |
+| **Posted** | date picker | The day you put the flyer up. |
+| **Flyer ver.** | click to edit | Which design/print run this flyer is ("v1", "spring-2026"). |
 | **Destination** | click to edit | The website this code forwards to. |
-| **Scans** | automatic | Live count from GoatCounter. |
-| **Notes** | click to edit | Anything ("re-postered 3/12", "taken down"). |
+| **Scans** | automatic | Live count from GoatCounter. Click it to open that code's full scan history and graphs in the dashboard. |
+| **Last scan** | automatic | How long since the last scan. Inferred: the manager notices when a count rises between checks, so it fills in as you use the page (`?` = scans predate tracking; exact times are one click away in GoatCounter). |
+| **Prev. check** | via **Record check** button | The scan count as of your last check-in, with date — and a green `+N` showing growth since. |
+| **Conv.** | click to edit | Conversions, entered by hand (see Notes below on why this can't be automatic). |
+| **Verified** | date picker | The day you last physically confirmed the flyer is still up. |
 | **Status** | dropdown | `retired` stops a code from forwarding (scans still counted). |
+| **Notes** | click to edit | Anything ("re-postered 3/12", "taken down"). |
 | **Copy URL** | button | Copies the exact URL to paste into a QR generator. |
 
-Plus search, filters (assigned / unassigned / edited), CSV export, and a
-**Load all scan counts** button (500 codes takes a couple of minutes — it goes
-gently to respect GoatCounter's rate limit).
+Plus search, filters (assigned / unassigned / edited), CSV export of every
+column, a **Load all scan counts** button (500 codes takes a couple of
+minutes — it goes gently to respect GoatCounter's rate limit), and **Record
+check**, which stamps today's counts into every code's "Prev. check" column
+so next visit you can see growth per location at a glance.
 
 **Saving:** edits apply instantly in your browser, but a static site can't
 write to itself — to make them live for scanners, click **Download
@@ -108,6 +118,14 @@ time, at <https://stealthsilent.goatcounter.com> (one row per code, e.g.
   scan carries no GPS. You know where a scan happened because you know where
   you posted that code. (GoatCounter separately shows visitors' rough
   country/region.)
+- **Why conversions are manual:** a conversion (signing up, donating) happens
+  on the destination site — e.g. pauseai.info — which you don't control and
+  can't see into. No QR service can measure that either. The scan→visit is
+  what's countable from outside; record conversions you learn about by hand.
+- **"Last scan" precision:** GoatCounter's public counter endpoint returns
+  totals only, so the manager infers recency by noticing count increases
+  between checks (per browser). For exact per-scan timestamps, click the
+  scan count — the GoatCounter dashboard has the full history.
 - **Privacy:** GoatCounter uses no cookies and collects no personal data, so
   no cookie banner is needed.
 - **Need more than 500?** Add more entries to `codes.json` — the pattern is
