@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>You found us!</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f7f6f2;
+      --fg: #1f2328;
+      --muted: #59636e;
+      --card: #ffffff;
+      --accent: #2f6f4f;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14171a;
+        --fg: #e6e9ec;
+        --muted: #9aa4ae;
+        --card: #1e2327;
+        --accent: #6fbf94;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: Georgia, "Times New Roman", serif;
+      padding: 1.5rem;
+    }
+    main {
+      max-width: 34rem;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+    h1 {
+      margin: 0 0 0.75rem;
+      font-size: 1.9rem;
+      color: var(--accent);
+    }
+    p {
+      margin: 0.5rem 0;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+    a { color: var(--accent); }
+  </style>
+
+  <!--
+    Per-flyer-batch tagging.
+
+    Each flyer batch gets its own QR code pointing at a URL like:
+
+        https://YOURNAME.github.io/AI-QR-Code-Flier-Counter/?src=library-march
+        https://YOURNAME.github.io/AI-QR-Code-Flier-Counter/?src=coffeeshop-march
+
+    GoatCounter normally drops the query string, so this snippet folds the
+    ?src= tag back into the recorded path. In the GoatCounter dashboard you
+    will see one row per batch (e.g. "/?src=library-march") and can compare
+    which locations pull.
+  -->
+  <script>
+    window.goatcounter = {
+      path: function (p) {
+        var src = new URLSearchParams(location.search).get('src');
+        return src ? p + '?src=' + encodeURIComponent(src) : p;
+      }
+    };
+  </script>
+
+  <!--
+    The GoatCounter one-liner. Replace MYCODE with the code you picked when
+    signing up at https://www.goatcounter.com (free for non-commercial use).
+    This is the only line you must edit to start counting.
+  -->
+  <script data-goatcounter="https://MYCODE.goatcounter.com/count"
+          async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+  <main>
+    <h1>You found us!</h1>
+    <p>Thanks for scanning our flyer.</p>
+    <p>
+      <!-- Customize this page: say who you are and where to go next. -->
+      Learn more at <a href="https://example.org">our main site</a>,
+      or reach us at <a href="mailto:hello@example.org">hello@example.org</a>.
+    </p>
+  </main>
+
+  <!-- No-JavaScript fallback: still counts the visit via a tracking pixel. -->
+  <noscript>
+    <img src="https://MYCODE.goatcounter.com/count?p=/noscript" alt="">
+  </noscript>
+</body>
+</html>
