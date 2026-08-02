@@ -26,9 +26,8 @@ code leads later **without reprinting anything**.
 
 | File | What it is |
 |---|---|
-| [`manager.html`](manager.html) | **The control panel** — interactive table of all 500 codes: name, location, destination, notes, status, live scan counts. |
-| [`codes.json`](codes.json) | The registry: 500 code slots (`qr-001` … `qr-500`). Edited via the manager. |
-| [`index.html`](index.html) | The redirect page every QR code points at. Counts, then forwards. You never edit this. |
+| [`index.html`](index.html) | **The whole site.** Visit it plain and it's the control panel — an interactive table of all 500 codes. Visit it with `?src=qr-001` (what QR codes encode) and it counts the scan and forwards the visitor. |
+| [`codes.json`](codes.json) | The registry: 500 code slots (`qr-001` … `qr-500`). Edited via the table. |
 | [`tools/make_qr.py`](tools/make_qr.py) | Optional: generates print-ready QR code PNGs offline. |
 
 Scan counting is [GoatCounter](https://www.goatcounter.com) (open source,
@@ -42,12 +41,12 @@ free for non-commercial use) — dashboard at
 **Settings → Pages** → Source **Deploy from a branch** → default branch,
 `/ (root)` → save. A minute later the site is live:
 
-- Manager: `https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/manager.html`
-- Redirect page (what QR codes encode): `https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=qr-001`
+- The manager table (just visit the site): `https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/`
+- What QR codes encode (same site + code ID): `https://stealthsilent1.github.io/AI-QR-Code-Flier-Counter/?src=qr-001`
 
-### 2. Assign your codes in the manager (~2 min per batch)
+### 2. Assign your codes (~2 min per batch)
 
-Open the manager. Each row is one QR code:
+Open the site — the table IS the homepage. Each row is one QR code:
 
 | Column | Editable? | Meaning |
 |---|---|---|
